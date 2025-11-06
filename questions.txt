@@ -1,0 +1,4 @@
+- how is real world computer use like streaming a movie or using excel captured by computing boolean functions? 
+- boolean circuits vs TMs, universality, code-as-data and self-modifying programs 
+- why a CPU captures this, core mapping between CPU and TM 
+- CPU / electronic computer design choices (alternative ways to implement a TM, eng decisions)

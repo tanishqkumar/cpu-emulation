@@ -1,0 +1,9 @@
+- add lexing/parsing for compiler 
+- support boolean/comparison ops 
+- support if/for/while statements 
+- make clear code vs data in memory 
+- change ISA to include eg. 10 registers R1-R10 (will need for cpu pipelining in future)
+
+- make adder, SR latch, fsm circuits
+- use in relevant cpu components as "macrocells"
+
