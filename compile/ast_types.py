@@ -70,9 +70,19 @@ class If(Statement):
     def __repr__(self) -> str: 
         return f"If({self.cond!r}, {self.then!r})"
 
+class While(Statement):
+    def __init__(self, cond: Expression, body: Block):
+        self.cond = cond
+        self.body = body
+
+    def __repr__(self) -> str: 
+        return f"While({self.cond!r}, {self.body!r})"
+
+
 class Program: 
     def __init__(self, stmts: list[Statement]):
         self.stmts = stmts
 
     def __repr__(self) -> str: 
         return f"Program({self.stmts!r})"
+

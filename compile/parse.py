@@ -48,19 +48,6 @@ def parse_assignment(tokens: list[Token]) -> Assignment:
     assert tokens[1].type == 'ASSIGN', "Expected assignment operator, got something else"
     return Assignment(tokens[0].value, parse_expr(tokens[2:]))
 
-def parse_if(block: list[list[Token]]) -> If:
-    assert block[0][0].type == 'IF', "Expected if keyword, got something else"
-    print(f'INSIDE PARSE_IF')
-    print(f'block: {block}')
-    print(f'giving parse_expr the tokens: {block[1][1:]}')
-    condition = parse_expr(block[0][1:])
-    
-    print(f'condition: {condition}')
-    print(f'giving parse_block the tokens: {block[2:-1]}')
-    then_block = parse_block(block[2:-1]) # Block, last element is endif
-    
-    return If(condition, Block(then_block))
-
 def parse_return(tokens: list[Token]) -> Return:
     assert tokens[0].type == 'RETURN', "Expected return keyword, got something else"
     return Return(parse_expr(tokens[1:]))
@@ -97,12 +84,17 @@ def parse_chunk(i: int, stmts: list[list[Token]]) -> list[ASTNode]:
         curr_line = stmts[i]
         
         # casework on [IF, ENDIF, ONE LINERS]
-        if curr_line[0].type == 'IF': 
+        if curr_line[0].type in ['IF', 'WHILE']: 
             condn = parse_expr(curr_line[1:]) 
-            i, then_block = parse_chunk(i + 1, stmts)
-            parsed.append(If(condn, Block(then_block)))
+            i, parsed_block = parse_chunk(i + 1, stmts)
+            if curr_line[0].type == 'IF':
+                parsed.append(If(condn, Block(parsed_block)))
+            elif curr_line[0].type == 'WHILE':
+                parsed.append(While(condn, Block(parsed_block)))
+            else:
+                raise RuntimeError(f"Expected if or while keyword, got {curr_line[0].type}")
             
-        elif curr_line[0].type == 'ENDIF':
+        elif curr_line[0].type in ['ENDIF', 'ENDWHILE']:
             return i + 1, parsed 
         else:
             parsed.append(parse_one_liner(curr_line))

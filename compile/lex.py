@@ -23,6 +23,8 @@ def lex_line(line: str) -> list[Token]:
         ('NUMBER',   r'\d+'),
         ('IF',       r'if\b'),
         ('ENDIF',    r'endif\b'),
+        ('WHILE',    r'while\b'),
+        ('ENDWHILE', r'endwhile\b'),
         ('RETURN',   r'return\b'),
         ('ID',       r'[A-Za-z_]\w*'),
         # Match multi-char ops first to ensure longest match (order matters)
@@ -40,7 +42,7 @@ def lex_line(line: str) -> list[Token]:
         match kind:
             case 'NUMBER':
                 token = Token('NUMBER', int(value))
-            case 'IF' | 'ENDIF':
+            case 'IF' | 'ENDIF' | 'WHILE' | 'ENDWHILE':
                 token = Token(kind)
             case 'RETURN':
                 token = Token('RETURN', value)

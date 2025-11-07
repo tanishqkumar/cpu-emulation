@@ -16,6 +16,8 @@ OPCODES = {
     0xFF: "HALT",  # 0xFF: Halt execution
 }
 
+
+
 # OPCODE_ARGCOUNTS dictionary: maps opcode byte to # of arguments (tldr: how many bytes after opcode?)
 OPCODE_ARGCOUNTS = {
     0x00: 0,  # NOP: no operand

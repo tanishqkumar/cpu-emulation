@@ -85,6 +85,25 @@ def compile_chunk(block: Block, curr_addr: int) -> list[tuple]:
                 compiled_then = compile_chunk(stmt.then, curr_addr + len_tuple_list(out) + 2)
                 out.append(("JNZ", curr_addr + len_tuple_list(out) + len_tuple_list(compiled_then) + 2))
                 out.extend(compiled_then)
+            case While():
+                compiled_condition = compile_expression(stmt.cond)
+                out.extend(compiled_condition)
+                ckpt = curr_addr + len_tuple_list(out) 
+                compiled_body = compile_chunk(stmt.body, curr_addr + len_tuple_list(out) + 2)
+                out.append(("JNZ", curr_addr + len_tuple_list(out) + len_tuple_list(compiled_body) + 2 + 2)) # 2 for jnz, 2 for jmp
+                out.extend(compiled_body)
+                out.append(("JMP", ckpt))
+
+                # while (cond) { body }
+                
+                # compiled_cond (curr_addr)
+                # JNZ to line X
+                # body
+                # jmp back up to cond 
+                # line X
+
+
+                
             case _:
                 raise RuntimeError(f"Unknown statement type: {type(stmt)}")
     return out
