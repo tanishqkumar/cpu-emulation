@@ -21,16 +21,13 @@ def lex_line(line: str) -> list[Token]:
     tokens = []
     token_specification = [
         ('NUMBER',   r'\d+'),
-        ('ASSIGN',   r'='),
         ('IF',       r'if\b'),
-        ('LPAR',     r'\('),
-        ('RPAR',     r'\)'),
-        ('LBRACE',   r'\{'),
-        ('RBRACE',   r'\}'),
+        ('ENDIF',    r'endif\b'),
         ('RETURN',   r'return\b'),
         ('ID',       r'[A-Za-z_]\w*'),
         # Match multi-char ops first to ensure longest match (order matters)
         ('OP',       r'\*\*|==|!=|>=|<=|and|or|not|[\+\-\*/%><]'),  # covers +, -, *, /, %, >, <, **, ==, !=, >=, <=, and, or
+        ('ASSIGN',   r'='),
         ('SKIP',     r'[ \t]+'),
         ('MISMATCH', r'.'),
     ]
@@ -43,16 +40,8 @@ def lex_line(line: str) -> list[Token]:
         match kind:
             case 'NUMBER':
                 token = Token('NUMBER', int(value))
-            case 'IF':
-                token = Token('IF')
-            case 'LPAR':
-                token = Token('LPAR')
-            case 'RPAR':
-                token = Token('RPAR')
-            case 'LBRACE':
-                token = Token('LBRACE')
-            case 'RBRACE':
-                token = Token('RBRACE')
+            case 'IF' | 'ENDIF':
+                token = Token(kind)
             case 'RETURN':
                 token = Token('RETURN', value)
             case 'ID' | 'ASSIGN':

@@ -15,38 +15,50 @@ OPCODES = {
     0xFF: "HALT",  # 0xFF: Halt execution
 }
 
-example_program = [
-    "LDI 2",
-    "STA 0x1",
-    "LDI 5",
-    "STA 0x2",
-    "LDA 0x1",
-    "ADD 0x2",
-    "STA 0x0",
-    "LDI 3",
-    "ADD 0x0",
-    "STA 0x3",
-    "LDA 0x3",
-    "STA 0x0",
-    "LDI 11",
-    "ADD 0x0",
-    "HALT"
+# Example of tuple-based program as produced by compile_from_ast.py:
+example_tuple_program = [
+    ("LDI", 2),
+    ("STA", 0x1),
+    ("LDI", 5),
+    ("STA", 0x2),
+    ("LDA", 0x1),
+    ("ADD", 0x2),
+    ("STA", 0x0),
+    ("LDI", 3),
+    ("ADD", 0x0),
+    ("STA", 0x3),
+    ("LDA", 0x3),
+    ("STA", 0x0),
+    ("LDI", 11),
+    ("ADD", 0x0),
+    ("HALT",)
 ]
 
-def assemble(program: list[str]) -> list[int]:
+def assemble(program: list[tuple]) -> list[int]:
+    """
+    Assemble a list of tuples of op/arg as emitted by the compiler.
+    Each element is a tuple: ("OP", arg) or just ("OP",)
+    """
     CODEOPS = {v: k for k, v in OPCODES.items()}
     out = []
-    for line in program: 
-        args = line.split(" ")
-        assert len(args) in [1, 2], "Invalid instruction"
-        CODEOP = CODEOPS[args[0]]
-        out.append(CODEOP)
-        if len(args) > 1: 
-            out.append(eval(args[1]))
-
-    return out 
+    for instr in program:
+        match instr:
+            case (op, arg):  # two elements
+                codeop = CODEOPS[op]
+                out.append(codeop)
+                # Supports hex string args like '0xA1', or already-int
+                if isinstance(arg, str) and arg.startswith('0x'):
+                    out.append(int(arg, 16))
+                else:
+                    out.append(int(arg))
+            case (op,):      # just ("HALT",), etc
+                codeop = CODEOPS[op]
+                out.append(codeop)
+            case _:
+                raise ValueError(f"Invalid instruction tuple: {instr}")
+    return out
 
 if __name__ == "__main__":
-    out = assemble(example_program)
+    out = assemble(example_tuple_program)
     for line in out:
         print(line)

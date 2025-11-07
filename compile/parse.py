@@ -1,5 +1,5 @@
 from .lex import lex, Token
-from .ast_types import Expression, Variable, Literal, Assignment, Return, Program, ASTNode, UnaryOp, BinOp
+from .ast_types import Expression, Variable, Literal, Assignment, Return, Program, ASTNode, UnaryOp, BinOp, If, Statement, Block
 
 # (not a) == (b + 3)
     # BinOp(UnaryOp(Variable("a")), "==", BinOp(Variable("b"), "+", Literal(3)))
@@ -28,12 +28,11 @@ def parse_expr(tokens: list[Token]) -> Expression: # need to solve precedence an
                     raise RuntimeError(f"Expected unary operator, got {tokens[0].value}")
         else:
             raise RuntimeError(f"Expected unary operator and variable, got {tokens[0].type} and {tokens[1].type}")
-    else: # binops, need order of if stmts to reflect precedence
-        # Find RIGHTMOST operator at each precedence level for left-associativity
-        # Lower precedence first (evaluated last)
+    else: 
+        # Find RIGHTMOST operator at each precedence level for left-associativity, order of loops defines precedence
         for i in range(len(tokens) - 1, -1, -1):
             tok = tokens[i]
-            if tok.type == 'OP' and tok.value in ['==', '!=', '>', '<', '>=', '<=', 'and', 'or']: 
+            if tok.type == 'OP' and tok.value in ['==', '!=', 'and', 'or']: # '>', '<', '>=', '<=', not supported yet
                 return BinOp(parse_expr(tokens[:i]), tok.value, parse_expr(tokens[i+1:]))
         
         for i in range(len(tokens) - 1, -1, -1):
@@ -49,19 +48,25 @@ def parse_assignment(tokens: list[Token]) -> Assignment:
     assert tokens[1].type == 'ASSIGN', "Expected assignment operator, got something else"
     return Assignment(tokens[0].value, parse_expr(tokens[2:]))
 
-def parse_if(tokens: list[Token]) -> If:
-    assert tokens[0].type == 'IF', "Expected if keyword, got something else"
-    # condition = parse_expr(tokens[1:])
-    # then_block = parse_stmt(tokens[2:])
-    # TODo 
-        # need to add more flags to support >, <, >=, <=, ==, !=, first. (eg. not just Z flag but N)
-    return If(condition, then_block, else_block)
+def parse_if(block: list[list[Token]]) -> If:
+    assert block[0][0].type == 'IF', "Expected if keyword, got something else"
+    print(f'INSIDE PARSE_IF')
+    print(f'block: {block}')
+    print(f'giving parse_expr the tokens: {block[1][1:]}')
+    condition = parse_expr(block[0][1:])
+    
+    print(f'condition: {condition}')
+    print(f'giving parse_block the tokens: {block[2:-1]}')
+    then_block = parse_block(block[2:-1]) # Block, last element is endif
+    
+    return If(condition, Block(then_block))
 
 def parse_return(tokens: list[Token]) -> Return:
     assert tokens[0].type == 'RETURN', "Expected return keyword, got something else"
     return Return(parse_expr(tokens[1:]))
 
-def parse_stmt(tokens: list[Token]) -> ASTNode:
+
+def parse_one_liner(tokens: list[Token]) -> ASTNode:
     if len(tokens) <= 1:
         raise RuntimeError(f"Expected statement, got {tokens[0].type}")
     # route to (parse_assignment, parse_return, parse_expr)
@@ -69,7 +74,6 @@ def parse_stmt(tokens: list[Token]) -> ASTNode:
         return parse_return(tokens)
     elif tokens[1].type == 'ASSIGN':
         return parse_assignment(tokens)
-    # should handle if/for/while here as well 
     else:
         raise RuntimeError(f"Expected assignment, return, or expression, got {tokens[0].type}")
     
@@ -85,22 +89,48 @@ def split_at_newlines(tokens: list[Token]) -> list[list[Token]]:
             curr.append(tok)
     return stmts
 
+
+def parse_chunk(i: int, stmts: list[list[Token]]) -> list[ASTNode]: 
+
+    parsed = []
+    while i < len(stmts): 
+        curr_line = stmts[i]
+        
+        # casework on [IF, ENDIF, ONE LINERS]
+        if curr_line[0].type == 'IF': 
+            condn = parse_expr(curr_line[1:]) 
+            i, then_block = parse_chunk(i + 1, stmts)
+            parsed.append(If(condn, Block(then_block)))
+            
+        elif curr_line[0].type == 'ENDIF':
+            return i + 1, parsed 
+        else:
+            parsed.append(parse_one_liner(curr_line))
+            i += 1
+
+    return i, parsed
+
+
 def parse(tokens: list[Token]) -> ASTNode:
-    stmts = split_at_newlines(tokens)
-    parsed_stmts = []
-    for stmt in stmts:
-        parsed = parse_stmt(stmt)
-        parsed_stmts.append(parsed)
+    stmts = split_at_newlines(tokens) 
+    _, parsed_stmts = parse_chunk(0, stmts)
+    
     return Program(parsed_stmts)
 
 
 if __name__ == "__main__":
     program= """
-                x=2
-                y=5
-                z=x+y
-                return z+3
+                x = 4
+                y = 2
+                if x == 5
+                    if y == 2
+                        x = x + 420 
+                    endif
+                    x = x + 69
+                endif
+                z = 4
+                return x
             """
     tokens = lex(program)
     ast = parse(tokens)
-    
+    print(ast)

@@ -1,10 +1,3 @@
-# To get started:
-# - Implement the ALU first: a class with a method to perform add/sub/and/or/xor/not on 8-bit values, updating a zero flag as needed.
-# - Build a simple Memory class: a 256-byte array with read/write/load methods.
-# - Design the ControlUnit: handles registers (IP, ACC, Z), fetches and decodes instructions, and uses the ALU and Memory.
-# - The CPU class ties them all together and provides convenience methods for loading and running programs.
-# - Start by supporting core instructions: LDI, LDA, STA, ADD, SUB, JMP, JZ, JNZ, HALT.
-# - Test with simple sample programs (see programs.py).
 from .handlers import OPCODES, OPCODE_ARGCOUNTS, HANDLERS
 from .utils import print_state 
 
@@ -17,12 +10,15 @@ class ALU:
             result = (a - b) % 256
         elif op == "and":
             result = a & b
+            # AND_CIRCUIT.CALL(A, B)
         elif op == "or":
             result = a | b
         elif op == "xor":
             result = a ^ b
         elif op == "not":
-            result = (~a) & 0xFF
+            print(f"ALU 'not' input before: {a}")
+            result = int(not a)
+            print(f"ALU 'not' result after: {result}")
         else: 
             raise NotImplementedError(f"Operation {op} not implemented")
         return result, {"Z": result == 0, "N": result < 0}
